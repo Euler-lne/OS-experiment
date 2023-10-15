@@ -17,11 +17,10 @@ int main(int argc, char *argv[])
         printf("I am the child process, my process id is %d\n", getpid());
         Collatz(num);
         printf("ID: %d quit\n", getpid());
-        exit(10);
+        return 1;
     }
     printf("I am the parent process, my process id is %d\n", getpid());
-    int status;
-    wait(&status);
+    wait(NULL);
     printf("ID: %d quit\n", getpid());
     return 0;
 }
@@ -48,4 +47,5 @@ void Collatz(int num)
             j = 0;
         }
     }
+    printf("\n");
 }
