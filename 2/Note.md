@@ -1,3 +1,5 @@
+### 一、wait()
+### 二、共享内存
 ```C
 int shm_open(const char *name, int oflag, mode_t mode);//打开创建共享内存文件
      返回值:成功返回fd>0
@@ -85,3 +87,136 @@ int munmap(void *addr, size_t length);//解除映射
  */
 
 ```
+### 三、管道
+#### 基本概念
+    从概念上讲，管道是两个进程之间的连接，一个进程的标准输出成为另一个进程的标准输入。在UNIX操作系统中，管道用于进程间通信。
+
+* 管道只是单向通信，即我们可以这样使用管道：一个进程向管道写入数据，另一个进程从管道读取数据。管道，是内存中被视为“虚拟文件”的一块区域。
+* 管道可以被创建进程及其所有子进程读写。一个进程可以写入这个“虚拟文件”或管道，另一个相关进程可以从中读取。
+* 如果在某个内容写入管道之前，某个进程试图读取该内容，则该进程将挂起，直到内容被写入。
+* 管道系统调用在进程的打开文件表中找到前两个可用位置，并将其分配给管道的读取和写入端。
+![Alt text](img/1.png)
+```C
+int pipe(int fds[2]);
+
+// 参数：
+// fd[0] 将是管道读取端的fd（文件描述符）
+// fd[1] 将是管道写入端的fd
+// 返回值：0表示成功，-1表示失败。
+```
+```C
+// C program to illustrate 
+// pipe system call in C 
+#include <stdio.h> 
+#include <unistd.h> 
+#define MSGSIZE 16 
+char* msg1 = "hello, world #1"; 
+char* msg2 = "hello, world #2"; 
+char* msg3 = "hello, world #3"; 
+  
+int main() 
+{ 
+    char inbuf[MSGSIZE]; 
+    int p[2], i; 
+  
+    if (pipe(p) < 0) 
+        exit(1); 
+  
+    /* continued */
+    /* write pipe */
+  
+    write(p[1], msg1, MSGSIZE); 
+    write(p[1], msg2, MSGSIZE); 
+    write(p[1], msg3, MSGSIZE); 
+  
+    for (i = 0; i < 3; i++) { 
+        /* read pipe */
+        read(p[0], inbuf, MSGSIZE); 
+        printf("% s\n", inbuf); 
+    } 
+    return 0; 
+} 
+/* 输出
+hello, world #1
+hello, world #2
+hello, world #3
+*/
+```
+
+#### 父子进程共享管道
+    当我们在任何进程中使用fork时，文件描述符在子进程和父进程之间保持打开状态。如果我们在创建管道后调用fork，则父级和子级可以通过管道进行通信。
+
+![Alt text](img/2.png)
+```C
+// C program to illustrate 
+// pipe system call in C 
+// shared by Parent and Child 
+#include <stdio.h> 
+#include <unistd.h> 
+#define MSGSIZE 16 
+char* msg1 = "hello, world #1"; 
+char* msg2 = "hello, world #2"; 
+char* msg3 = "hello, world #3"; 
+  
+int main() 
+{ 
+    char inbuf[MSGSIZE]; 
+    int p[2], pid, nbytes; 
+  
+    if (pipe(p) < 0) 
+        exit(1); 
+  
+    /* continued */
+    if ((pid = fork()) > 0) { 
+        write(p[1], msg1, MSGSIZE); 
+        write(p[1], msg2, MSGSIZE); 
+        write(p[1], msg3, MSGSIZE); 
+  
+        // Adding this line will 
+        // not hang the program 
+        // close(p[1]); 
+        wait(NULL); 
+    } 
+  
+    else { 
+        // Adding this line will 
+        // not hang the program 
+        // close(p[1]); 
+        while ((nbytes = read(p[0], inbuf, MSGSIZE)) > 0) 
+            printf("% s\n", inbuf); 
+        if (nbytes != 0) 
+            exit(2); 
+        printf("Finished reading\n"); 
+    } 
+    return 0; 
+} 
+/*
+hello world, #1
+hello world, #2
+hello world, #3
+(hangs)         //program does not terminate but hangs
+*/
+```
+在Linux中，`read()`和`write()`是两个用于文件操作的系统调用函数，它们在管道通信中经常被使用。下面是它们的参数说明：
+
+对于`read()`函数：
+- 参数1：文件描述符（file descriptor），表示要读取数据的文件描述符。
+- 参数2：缓冲区（buffer），用于存储读取到的数据。
+- 参数3：读取数据的最大字节数。
+- 返回值：实际读取到的字节数。如果返回值为0，表示已经到达文件末尾；若返回-1，表示读取出错，可以通过`errno`变量获取具体错误信息。
+
+对于`write()`函数：
+- 参数1：文件描述符，表示要写入数据的文件描述符。
+- 参数2：要写入的数据缓冲区。
+- 参数3：要写入的字节数。
+- 返回值：实际写入的字节数。如果返回值为-1，表示写入出错，可以通过`errno`变量获取具体错误信息。
+
+在使用这两个函数时，需要注意以下几点：
+1. `read()`和`write()`是阻塞的系统调用，如果对应的文件描述符没有数据可读或无法写入数据，调用将会被阻塞，直到有数据可读或有空闲空间可写入。
+2. 可以多次调用`read()`和`write()`来读取/写入大于缓冲区大小的数据，直到读取/写入所需的字节数。
+3. `read()`和`write()`可以用于读写管道、文件、网络套接字等。
+
+需要注意的是，以上是`read()`和`write()`函数在文件操作中的基本用法说明，并非仅限于管道通信。这两个函数在Linux系统编程中非常常用，可用于各种类型的文件和通信方式。
+
+
+* 最后需要关闭管道
