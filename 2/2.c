@@ -37,6 +37,10 @@ int main(int argc, char *argv[])
             sprintf(cur_num, "%d", N);
             message = (char *)malloc(sizeof(char));
             message = realloc(message, strlen(cur_num));
+            if (message == NULL) {
+                printf("Realloc error\n");
+                exit(1);
+            }
             sprintf(message, "%s", cur_num);
             while (N != 1) {
                 if (N % 2 == 0) {
@@ -46,6 +50,10 @@ int main(int argc, char *argv[])
                 }
                 sprintf(cur_num, "%d", N);
                 message = realloc(message, strlen(message) + strlen(cur_num) + 1);
+                if (message == NULL) {
+                    printf("Realloc error\n");
+                    exit(1);
+                }
                 // 新数字与旧数字之间隔一个空格
                 sprintf(message, "%s %s", message, cur_num);
             }
@@ -55,6 +63,7 @@ int main(int argc, char *argv[])
             ptr1 = mmap(0, SIZE, PROT_WRITE, MAP_SHARED, shm_fd1, 0);
             sprintf(ptr1, "%s", message);
             ptr1 += strlen(message);
+            free(message);
         }
         printf("ID: %d quit\n", getpid());
     } else {

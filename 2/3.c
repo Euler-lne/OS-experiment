@@ -33,10 +33,10 @@ int main()
             exit(1);
         }
         close(p1[1]);
-        printf("Parent write %s", buf);
+        printf("Parent write: %s", buf);
         wait(NULL);
         while ((nbytes = read(p2[0], buf, SIZE)) > 0) {
-            printf("Parent read %s", buf);
+            printf("Parent read: %s", buf);
             break;
         }
         if (nbytes < 0) {
@@ -49,7 +49,7 @@ int main()
         char buf[SIZE] = {'\0'};
         int nbytes;
         while ((nbytes = read(p1[0], buf, SIZE)) > 0) {
-            printf("Child read %s", buf);
+            printf("Child read: %s", buf);
             int i = 0;
             while (buf[i]) {
                 if (isupper(buf[i])) {
@@ -64,7 +64,7 @@ int main()
                 exit(1);
             }
             close(p2[1]);
-            printf("Child write %s", buf);
+            printf("Child write: %s", buf);
             break;
         }
         if (nbytes < 0) {

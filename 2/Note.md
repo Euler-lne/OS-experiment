@@ -2,8 +2,8 @@
 ### 二、共享内存
 ```C
 int shm_open(const char *name, int oflag, mode_t mode);//打开创建共享内存文件
-     返回值:成功返回fd>0
-           失败返回fd<0
+//  返回值:成功返回fd>0
+//        失败返回fd<0
 int shm_unlink(const char *name);//删除共享内存
 int ftruncate(int fd, off_t length);//重置共享内存文件大小
 void *mmap(void *addr, size_t length, int prot, int flags,int fd, off_t offset);//地址映射
