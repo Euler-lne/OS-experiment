@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 {
     int num = 35;
     if (argc >= 2)
-        num = atoi(argv[1]);
+        num = atoi(argv[1]) > 0 ? atoi(argv[1]) : 35;
     int fpid = fork();
     if (fpid < 0)
         printf("error in fork.\n");

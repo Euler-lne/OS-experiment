@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     const char *name = "OS_2.2";
     int N = 35;
     if (argc >= 2)
-        N = atoi(argv[1]);
+        N = atoi(argv[1]) > 0 ? atoi(argv[1]) : 35;
     int pid = fork();
     if (pid < 0) {
         printf("Error in fork.\n");
