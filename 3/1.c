@@ -36,6 +36,7 @@ int main()
         pthread_join(id[i], NULL);
     }
     OutputResult();
+    free(arry);
     return 0;
 }
 void ReadNumbers(int *arry)
